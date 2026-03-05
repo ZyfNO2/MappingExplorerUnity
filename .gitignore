@@ -1,0 +1,26 @@
+# Unity generated files
+Library/
+Logs/
+obj/
+UserSettings/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build files
+Build/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Package files
+*.unitypackage
