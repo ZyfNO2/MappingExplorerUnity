@@ -85,13 +85,16 @@ public class PointCloudPicker : MonoBehaviour
                             
                             if (closestPointIndex != -1 && pointCloudRenderer.vertices != null && pointCloudRenderer.colors != null && closestPointIndex < pointCloudRenderer.vertices.Count && closestPointIndex < pointCloudRenderer.colors.Count)
                             {
-                                // 获取点的坐标和颜色
-                                Vector3 point = pointCloudRenderer.vertices[closestPointIndex];
+                                // 获取点的坐标（PLY文件中的原始坐标）
+                                Vector3 pointCloudCoordinate = pointCloudRenderer.vertices[closestPointIndex];
+                                // 由于点云对象的transform已设置为identity，局部坐标就等于世界坐标
+                                Vector3 worldCoordinate = pointCloudCoordinate;
                                 Color color = pointCloudRenderer.colors[closestPointIndex];
                                 
                                 // Log信息
                                 Debug.Log($"=== Point Cloud Picker: SUCCESS ===");
-                                Debug.Log($"=== Position = ({point.x}, {point.y}, {point.z}) ===");
+                                Debug.Log($"=== PLY File Coordinate = ({pointCloudCoordinate.x}, {pointCloudCoordinate.y}, {pointCloudCoordinate.z}) ===");
+                                Debug.Log($"=== World Coordinate = ({worldCoordinate.x}, {worldCoordinate.y}, {worldCoordinate.z}) ===");
                                 Debug.Log($"=== Color = ({color.r}, {color.g}, {color.b}) ===");
                             }
                             else
@@ -282,48 +285,3 @@ public class PointCloudPicker : MonoBehaviour
     }
 }
 
-[CustomEditor(typeof(PointCloudPicker))]
-public class PointCloudPickerEditor : Editor
-{
-    public override void OnInspectorGUI()
-    {
-        if (target == null)
-        {
-            EditorGUILayout.HelpBox("Target is null", MessageType.Error);
-            return;
-        }
-        
-        PointCloudPicker picker = (PointCloudPicker)target;
-        
-        // 显示引用
-        picker.pointCloudRenderer = (PointCloudRenderer)EditorGUILayout.ObjectField("Point Cloud Renderer", picker.pointCloudRenderer, typeof(PointCloudRenderer), true);
-        picker.raycastCamera = (Camera)EditorGUILayout.ObjectField("Raycast Camera", picker.raycastCamera, typeof(Camera), true);
-        
-        // 添加按钮
-        EditorGUILayout.Space();
-        if (GUILayout.Button("Select Point Cloud Renderer"))
-        {
-            picker.SelectPointCloudRenderer();
-        }
-        
-        if (GUILayout.Button("Select Raycast Camera"))
-        {
-            picker.SelectRaycastCamera();
-        }
-        
-        // 确保点云对象有碰撞器
-        if (GUILayout.Button("Ensure Collider"))
-        {
-            if (picker.pointCloudRenderer != null)
-            {
-                picker.EnsureColliderExists();
-            }
-        }
-        
-        // 应用更改
-        if (GUI.changed)
-        {
-            EditorUtility.SetDirty(picker);
-        }
-    }
-}

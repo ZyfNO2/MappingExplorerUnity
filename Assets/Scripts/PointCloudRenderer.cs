@@ -15,6 +15,15 @@ public class PointCloudRenderer : MonoBehaviour
     public float pointHeight = 1.0f;
     public Material pointMaterial;
     
+    // 点云显示范围控制
+    public bool enableFiltering = true;
+    public float minX = -1.0f;
+    public float maxX = 1.0f;
+    public float minY = 0.0f;
+    public float maxY = 2.0f;
+    public float minZ = -1.0f;
+    public float maxZ = 0.0f;
+    
     private Mesh mesh;
     public List<Vector3> vertices = new List<Vector3>();
     public List<Color> colors = new List<Color>();
@@ -43,6 +52,11 @@ public class PointCloudRenderer : MonoBehaviour
         if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
         {
             Debug.Log($"=== PointCloudRenderer: Initializing - Loading point cloud from {filePath} ===");
+            // 确保点云对象的transform为identity，这样局部坐标就等于世界坐标
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            transform.localScale = Vector3.one;
+            Debug.Log("=== PointCloudRenderer: Set transform to identity ===");
             LoadPointCloud();
             CreateMesh();
             Debug.Log("=== PointCloudRenderer: Initialization complete ===");
@@ -71,6 +85,40 @@ public class PointCloudRenderer : MonoBehaviour
         {
             Debug.LogError("Unsupported file format. Please use .ply or .csv");
         }
+        
+        // 过滤点云，只保留x(-1,-1), y(0,2), z(-1,0)范围内的点
+        FilterPointCloud();
+    }
+    
+    // 过滤点云，只保留指定范围内的点
+    void FilterPointCloud()
+    {
+        if (!enableFiltering)
+        {
+            Debug.Log("=== PointCloudRenderer: Filtering disabled ===");
+            return;
+        }
+        
+        List<Vector3> filteredVertices = new List<Vector3>();
+        List<Color> filteredColors = new List<Color>();
+        
+        for (int i = 0; i < vertices.Count; i++)
+        {
+            Vector3 point = vertices[i];
+            // 检查点是否在指定范围内
+            if (point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY && point.z >= minZ && point.z <= maxZ)
+            {
+                filteredVertices.Add(point);
+                filteredColors.Add(colors[i]);
+            }
+        }
+        
+        // 替换为过滤后的点
+        vertices = filteredVertices;
+        colors = filteredColors;
+        
+        Debug.Log($"=== PointCloudRenderer: Filtered point cloud - {filteredVertices.Count} points remaining ===");
+        Debug.Log($"=== Filter range: x[{minX},{maxX}], y[{minY},{maxY}], z[{minZ},{maxZ}] ===");
     }
     
     void LoadPLYFile(string path)
@@ -212,11 +260,12 @@ public class PointCloudRenderer : MonoBehaviour
         // 清除现有的测试对象
         ClearTestObjects();
         
-        // 生成测试对象
-        CreateTestObject(new Vector3(0, 0, 0), Color.red, "TestObject_Red");
-        CreateTestObject(new Vector3(0, 1, 0), Color.green, "TestObject_Green");
-        CreateTestObject(new Vector3(1, 0, 0), Color.blue, "TestObject_Blue");
-        CreateTestObject(new Vector3(0, 0, 1), Color.yellow, "TestObject_Yellow");
+        // 在原点创建黄色球形测试对象
+        CreateSphereTestObject(new Vector3(0, 0, 0), Color.yellow, "TestObject_Origin_Yellow");  // 原点
+        // 生成测试对象，确保x轴红色，y轴绿色，z轴蓝色
+        CreateTestObject(new Vector3(1, 0, 0), Color.red, "TestObject_X_Red");     // x轴
+        CreateTestObject(new Vector3(0, 1, 0), Color.green, "TestObject_Y_Green");   // y轴
+        CreateTestObject(new Vector3(0, 0, 1), Color.blue, "TestObject_Z_Blue");    // z轴
     }
     
     // 清除测试对象
@@ -239,7 +288,9 @@ public class PointCloudRenderer : MonoBehaviour
     {
         // 创建GameObject
         GameObject obj = new GameObject(name);
-        obj.transform.position = position;
+        // 设置为PointCloudRenderer的子物体
+        obj.transform.parent = transform;
+        obj.transform.localPosition = position;
         
         // 添加Cube作为正方形
         MeshFilter meshFilter = obj.AddComponent<MeshFilter>();
@@ -247,7 +298,8 @@ public class PointCloudRenderer : MonoBehaviour
         
         // 添加MeshRenderer和Material
         MeshRenderer renderer = obj.AddComponent<MeshRenderer>();
-        Material material = new Material(Shader.Find("Standard"));
+        // 使用Unlit shader
+        Material material = new Material(Shader.Find("Unlit/Color"));
         material.color = color;
         renderer.material = material;
         
@@ -255,6 +307,108 @@ public class PointCloudRenderer : MonoBehaviour
         obj.AddComponent<BoxCollider>();
         
         Debug.Log($"Created test object {name} at {position} with color {color}");
+    }
+    
+    // 创建球形测试对象
+    void CreateSphereTestObject(Vector3 position, Color color, string name)
+    {
+        // 创建GameObject
+        GameObject obj = new GameObject(name);
+        // 设置为PointCloudRenderer的子物体
+        obj.transform.parent = transform;
+        obj.transform.localPosition = position;
+        
+        // 添加Sphere作为球形
+        MeshFilter meshFilter = obj.AddComponent<MeshFilter>();
+        meshFilter.mesh = CreateSphereMesh(0.05f);
+        
+        // 添加MeshRenderer和Material
+        MeshRenderer renderer = obj.AddComponent<MeshRenderer>();
+        // 使用Unlit shader
+        Material material = new Material(Shader.Find("Unlit/Color"));
+        material.color = color;
+        renderer.material = material;
+        
+        // 添加SphereCollider
+        obj.AddComponent<SphereCollider>();
+        
+        Debug.Log($"Created sphere test object {name} at {position} with color {color}");
+    }
+    
+    // 创建球形网格
+    Mesh CreateSphereMesh(float radius)
+    {
+        Mesh mesh = new Mesh();
+        
+        List<Vector3> vertices = new List<Vector3>();
+        List<int> triangles = new List<int>();
+        List<Vector3> normals = new List<Vector3>();
+        
+        int segments = 8;
+        float angleStep = 2 * Mathf.PI / segments;
+        
+        // 顶部顶点
+        vertices.Add(new Vector3(0, radius, 0));
+        normals.Add(Vector3.up);
+        
+        // 中间层
+        for (int i = 1; i < segments; i++)
+        {
+            float y = radius * Mathf.Cos(i * angleStep / 2);
+            float r = radius * Mathf.Sin(i * angleStep / 2);
+            
+            for (int j = 0; j < segments; j++)
+            {
+                float x = r * Mathf.Cos(j * angleStep);
+                float z = r * Mathf.Sin(j * angleStep);
+                vertices.Add(new Vector3(x, y, z));
+                normals.Add(new Vector3(x, y, z).normalized);
+            }
+        }
+        
+        // 底部顶点
+        vertices.Add(new Vector3(0, -radius, 0));
+        normals.Add(Vector3.down);
+        
+        // 顶部三角
+        for (int i = 0; i < segments; i++)
+        {
+            triangles.Add(0);
+            triangles.Add(i + 1);
+            triangles.Add((i + 1) % segments + 1);
+        }
+        
+        // 中间三角
+        for (int i = 0; i < segments - 2; i++)
+        {
+            for (int j = 0; j < segments; j++)
+            {
+                int baseIndex = i * segments + 1;
+                triangles.Add(baseIndex + j);
+                triangles.Add(baseIndex + (j + 1) % segments);
+                triangles.Add(baseIndex + j + segments);
+                
+                triangles.Add(baseIndex + (j + 1) % segments);
+                triangles.Add(baseIndex + (j + 1) % segments + segments);
+                triangles.Add(baseIndex + j + segments);
+            }
+        }
+        
+        // 底部三角
+        int bottomIndex = vertices.Count - 1;
+        int lastLayerStart = (segments - 2) * segments + 1;
+        for (int i = 0; i < segments; i++)
+        {
+            triangles.Add(bottomIndex);
+            triangles.Add(lastLayerStart + i);
+            triangles.Add(lastLayerStart + (i + 1) % segments);
+        }
+        
+        mesh.vertices = vertices.ToArray();
+        mesh.triangles = triangles.ToArray();
+        mesh.normals = normals.ToArray();
+        
+        return mesh;
     }
     
     // 创建立方体网格
@@ -327,28 +481,43 @@ public class PointCloudRendererEditor : Editor
         renderer.pointHeight = EditorGUILayout.Slider("Point Height", renderer.pointHeight, 0.01f, 10.0f);
         renderer.pointMaterial = (Material)EditorGUILayout.ObjectField("Point Material", renderer.pointMaterial, typeof(Material), false);
         
-        // 编辑器按钮
+        // 点云过滤设置
         EditorGUILayout.Space();
-        if (GUILayout.Button("Import PLY File"))
+        EditorGUILayout.LabelField("Point Cloud Filtering", EditorStyles.boldLabel);
+        renderer.enableFiltering = EditorGUILayout.Toggle("Enable Filtering", renderer.enableFiltering);
+        
+        if (renderer.enableFiltering)
         {
-            string path = EditorUtility.OpenFilePanel("Select PLY File", Application.dataPath, "ply");
-            if (!string.IsNullOrEmpty(path))
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("X Range");
+            renderer.minX = EditorGUILayout.FloatField(renderer.minX);
+            renderer.maxX = EditorGUILayout.FloatField(renderer.maxX);
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("Y Range");
+            renderer.minY = EditorGUILayout.FloatField(renderer.minY);
+            renderer.maxY = EditorGUILayout.FloatField(renderer.maxY);
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("Z Range");
+            renderer.minZ = EditorGUILayout.FloatField(renderer.minZ);
+            renderer.maxZ = EditorGUILayout.FloatField(renderer.maxZ);
+            EditorGUILayout.EndHorizontal();
+            
+            // 应用过滤按钮
+            if (GUILayout.Button("Apply Filter"))
             {
-                renderer.filePath = path;
                 renderer.LoadPointCloud();
                 renderer.CreateMesh();
                 EditorUtility.SetDirty(renderer);
             }
         }
         
-        if (GUILayout.Button("Save PLY File"))
-        {
-            string path = EditorUtility.SaveFilePanel("Save PLY File", Application.dataPath, "point_cloud", "ply");
-            if (!string.IsNullOrEmpty(path))
-            {
-                SavePLYFile(renderer, path);
-            }
-        }
+
+        
+
         
         // 测试对象按钮
         EditorGUILayout.Space();
@@ -369,52 +538,5 @@ public class PointCloudRendererEditor : Editor
         }
     }
     
-    void SavePLYFile(PointCloudRenderer renderer, string path)
-    {
-        if (renderer == null || renderer.vertices == null || renderer.colors == null)
-        {
-            Debug.LogError("Cannot save PLY file: renderer or data is null");
-            return;
-        }
-        
-        try
-        {
-            using (StreamWriter writer = new StreamWriter(path))
-            {
-                // 写入PLY文件头
-                writer.WriteLine("ply");
-                writer.WriteLine("format ascii 1.0");
-                writer.WriteLine("comment Generated by PointCloudRenderer");
-                writer.WriteLine($"element vertex {renderer.vertices.Count}");
-                writer.WriteLine("property float32 x");
-                writer.WriteLine("property float32 y");
-                writer.WriteLine("property float32 z");
-                writer.WriteLine("property uchar red");
-                writer.WriteLine("property uchar green");
-                writer.WriteLine("property uchar blue");
-                writer.WriteLine("end_header");
-                
-                // 写入顶点数据
-                for (int i = 0; i < renderer.vertices.Count; i++)
-                {
-                    if (i < renderer.colors.Count)
-                    {
-                        Vector3 vertex = renderer.vertices[i];
-                        Color color = renderer.colors[i];
-                        int r = Mathf.RoundToInt(color.r * 255);
-                        int g = Mathf.RoundToInt(color.g * 255);
-                        int b = Mathf.RoundToInt(color.b * 255);
-                        writer.WriteLine($"{vertex.x} {vertex.y} {vertex.z} {r} {g} {b}");
-                    }
-                }
-            }
-            
-            AssetDatabase.Refresh();
-            Debug.Log($"PLY file saved to: {path}");
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"Error saving PLY file: {e.Message}");
-        }
-    }
+
 }
