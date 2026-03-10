@@ -67,6 +67,7 @@
     <Analyzer Include="F:\Unity\Fork Project\Mapping\Library\PackageCache\org.nuget.microsoft.codeanalysis.analyzers@3.11.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\SphereGenerator.cs" />
     <Compile Include="Assets\Scripts\TestObjectGenerator.cs" />
     <Compile Include="Assets\Scripts\PointCloudRenderer.cs" />
     <Compile Include="Assets\Scripts\CameraSync.cs" />
@@ -477,7 +478,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="ReflectorNet">
-      <HintPath>Library\PackageCache\com.ivanmurzak.unity.mcp@0.51.4\Plugins\com.IvanMurzak.ReflectorNet\ReflectorNet.dll</HintPath>
+      <HintPath>Library\PackageCache\com.ivanmurzak.unity.mcp@0.51.5\Plugins\com.IvanMurzak.ReflectorNet\ReflectorNet.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Text.Encodings.Web">
@@ -501,7 +502,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="McpPlugin">
-      <HintPath>Library\PackageCache\com.ivanmurzak.unity.mcp@0.51.4\Plugins\com.IvanMurzak.McpPlugin\netstandard2.1\McpPlugin.dll</HintPath>
+      <HintPath>Library\PackageCache\com.ivanmurzak.unity.mcp@0.51.5\Plugins\com.IvanMurzak.McpPlugin\netstandard2.1\McpPlugin.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.IO.Pipelines">
@@ -537,7 +538,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="McpPlugin.Common">
-      <HintPath>Library\PackageCache\com.ivanmurzak.unity.mcp@0.51.4\Plugins\com.IvanMurzak.McpPlugin\netstandard2.1\McpPlugin.Common.dll</HintPath>
+      <HintPath>Library\PackageCache\com.ivanmurzak.unity.mcp@0.51.5\Plugins\com.IvanMurzak.McpPlugin\netstandard2.1\McpPlugin.Common.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Net.ServerSentEvents">
