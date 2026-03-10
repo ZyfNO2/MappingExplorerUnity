@@ -121,6 +121,15 @@ public class PointCloudRenderer : MonoBehaviour
         Debug.Log($"=== Filter range: x[{minX},{maxX}], y[{minY},{maxY}], z[{minZ},{maxZ}] ===");
     }
     
+    // 重置过滤，显示所有点云
+    public void ResetFilter()
+    {
+        enableFiltering = false;
+        LoadPointCloud();
+        CreateMesh();
+        Debug.Log("=== PointCloudRenderer: Filter reset - all points displayed ===");
+    }
+    
     void LoadPLYFile(string path)
     {
         using (StreamReader reader = new StreamReader(path))
@@ -515,9 +524,12 @@ public class PointCloudRendererEditor : Editor
             }
         }
         
-
-        
-
+        // 重置过滤按钮
+        if (GUILayout.Button("Reset Filter"))
+        {
+            renderer.ResetFilter();
+            EditorUtility.SetDirty(renderer);
+        }
         
         // 测试对象按钮
         EditorGUILayout.Space();
