@@ -67,15 +67,22 @@
     <Analyzer Include="F:\Unity\Fork Project\Mapping\Library\PackageCache\org.nuget.microsoft.codeanalysis.analyzers@3.11.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\RaycastToPly.cs" />
-    <Compile Include="Assets\Scripts\SphereGenerator.cs" />
-    <Compile Include="Assets\Scripts\TestObjectGenerator.cs" />
-    <Compile Include="Assets\Scripts\PointCloudRenderer.cs" />
-    <Compile Include="Assets\Scripts\CameraSync.cs" />
-    <Compile Include="Assets\Scripts\PointCloudPicker.cs" />
+    <Compile Include="Assets\Scripts\Legacy\CameraSync.cs" />
+    <Compile Include="Assets\Scripts\Legacy\RaycastDebugger.cs" />
+    <Compile Include="Assets\Scripts\Legacy\PointCloudPicker.cs" />
+    <Compile Include="Assets\Scripts\Legacy\KDTree.cs" />
+    <Compile Include="Assets\Scripts\Legacy\SphereGenerator.cs" />
+    <Compile Include="Assets\Scripts\Legacy\PointCloudRenderer.cs" />
+    <Compile Include="Assets\Scripts\PointCloudManager.cs" />
+    <Compile Include="Assets\Scripts\Legacy\RaycastToPly.cs" />
+    <Compile Include="Assets\Scripts\PointCloudClickDetector.cs" />
+    <Compile Include="Assets\Scripts\Legacy\PointCloudImporter.cs" />
+    <Compile Include="Assets\Scripts\Legacy\TestObjectGenerator.cs" />
+    <Compile Include="Assets\Scripts\Legacy\DelaunayTriangulation.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Shaders\PointCloudShader.shader" />
+    <None Include="Assets\Scripts\PointCloudShader.shader" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
