@@ -46,7 +46,7 @@ public class PointCloudRenderer : MonoBehaviour
         Initialize();
     }
     
-    void Initialize()
+    public void Initialize()
     {
         // 无论是否在编辑器模式还是运行模式，都重新载入点云
         if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
@@ -132,49 +132,169 @@ public class PointCloudRenderer : MonoBehaviour
     
     void LoadPLYFile(string path)
     {
-        using (StreamReader reader = new StreamReader(path))
+        // 首先读取整个文件到内存
+        byte[] fileData = File.ReadAllBytes(path);
+        
+        // 找到header的结束位置
+        int headerEndIndex = FindHeaderEndIndex(fileData);
+        if (headerEndIndex < 0)
         {
-            string line;
-            bool isHeader = true;
-            int vertexCount = 0;
-            
-            while ((line = reader.ReadLine()) != null)
+            Debug.LogError("Could not find end_header in PLY file");
+            return;
+        }
+        
+        // 解析header
+        string headerText = System.Text.Encoding.ASCII.GetString(fileData, 0, headerEndIndex);
+        string[] headerLines = headerText.Split('\n');
+        
+        int vertexCount = 0;
+        bool isBinary = false;
+        bool isLittleEndian = true;
+        List<string> propertyNames = new List<string>();
+        
+        foreach (string line in headerLines)
+        {
+            string trimmedLine = line.Trim();
+            if (trimmedLine.StartsWith("format"))
             {
-                if (isHeader)
+                if (trimmedLine.Contains("binary"))
                 {
-                    if (line.StartsWith("element vertex"))
-                    {
-                        string[] parts = line.Split(' ');
-                        vertexCount = int.Parse(parts[2]);
-                    }
-                    else if (line == "end_header")
-                    {
-                        isHeader = false;
-                    }
+                    isBinary = true;
+                    isLittleEndian = trimmedLine.Contains("little_endian");
                 }
-                else
+            }
+            else if (trimmedLine.StartsWith("element vertex"))
+            {
+                string[] parts = trimmedLine.Split(' ');
+                vertexCount = int.Parse(parts[2]);
+            }
+            else if (trimmedLine.StartsWith("property"))
+            {
+                string[] parts = trimmedLine.Split(' ');
+                if (parts.Length >= 3)
                 {
-                    string[] parts = line.Split(' ');
-                    if (parts.Length >= 3)
-                    {
-                        float x = float.Parse(parts[0]);
-                        float y = float.Parse(parts[1]);
-                        float z = float.Parse(parts[2]);
-                        vertices.Add(new Vector3(x, y, z));
-                        
-                        Color color = Color.white;
-                        if (parts.Length >= 9)
-                        {
-                            byte r = byte.Parse(parts[6]);
-                            byte g = byte.Parse(parts[7]);
-                            byte b = byte.Parse(parts[8]);
-                            color = new Color(r / 255f, g / 255f, b / 255f);
-                        }
-                        colors.Add(color);
-                    }
+                    propertyNames.Add(parts[parts.Length - 1]);
                 }
             }
         }
+        
+        // 数据从header结束后的下一个字节开始
+        int dataStartIndex = headerEndIndex;
+        
+        // 读取数据
+        if (isBinary)
+        {
+            LoadBinaryPLYData(fileData, dataStartIndex, vertexCount, isLittleEndian, propertyNames);
+        }
+        else
+        {
+            string asciiData = System.Text.Encoding.ASCII.GetString(fileData, dataStartIndex, fileData.Length - dataStartIndex);
+            LoadASCIIPLYData(asciiData, vertexCount);
+        }
+    }
+    
+    int FindHeaderEndIndex(byte[] data)
+    {
+        string searchString = "end_header\n";
+        byte[] searchBytes = System.Text.Encoding.ASCII.GetBytes(searchString);
+        
+        for (int i = 0; i <= data.Length - searchBytes.Length; i++)
+        {
+            bool found = true;
+            for (int j = 0; j < searchBytes.Length; j++)
+            {
+                if (data[i + j] != searchBytes[j])
+                {
+                    found = false;
+                    break;
+                }
+            }
+            if (found)
+            {
+                return i + searchBytes.Length;
+            }
+        }
+        
+        return -1;
+    }
+    
+    void LoadBinaryPLYData(byte[] data, int startIndex, int vertexCount, bool isLittleEndian, List<string> propertyNames)
+    {
+        int index = startIndex;
+        
+        for (int i = 0; i < vertexCount && index + 27 <= data.Length; i++)
+        {
+            // 读取x, y, z (double类型，每个8字节)
+            double x = BitConverter.ToDouble(data, index);
+            double y = BitConverter.ToDouble(data, index + 8);
+            double z = BitConverter.ToDouble(data, index + 16);
+            
+            // 如果不是小端，需要反转字节
+            if (!isLittleEndian)
+            {
+                x = ReverseBytes(x);
+                y = ReverseBytes(y);
+                z = ReverseBytes(z);
+            }
+            
+            vertices.Add(new Vector3((float)x, (float)y, (float)z));
+            
+            // 读取颜色 (uchar类型，每个1字节)
+            byte r = data[index + 24];
+            byte g = data[index + 25];
+            byte b = data[index + 26];
+            
+            Color color = new Color(r / 255f, g / 255f, b / 255f);
+            colors.Add(color);
+            
+            // 每个顶点占27字节 (3个double + 3个byte)
+            index += 27;
+        }
+        
+        Debug.Log($"=== PointCloudRenderer: Loaded {vertices.Count} vertices from binary PLY ===");
+    }
+    
+    double ReverseBytes(double value)
+    {
+        byte[] bytes = BitConverter.GetBytes(value);
+        Array.Reverse(bytes);
+        return BitConverter.ToDouble(bytes, 0);
+    }
+    
+    void LoadASCIIPLYData(string asciiData, int vertexCount)
+    {
+        string[] lines = asciiData.Split('\n');
+        int count = 0;
+        
+        foreach (string line in lines)
+        {
+            if (count >= vertexCount) break;
+            
+            string trimmedLine = line.Trim();
+            if (string.IsNullOrEmpty(trimmedLine)) continue;
+            
+            string[] parts = trimmedLine.Split(' ');
+            if (parts.Length >= 3)
+            {
+                float x = float.Parse(parts[0]);
+                float y = float.Parse(parts[1]);
+                float z = float.Parse(parts[2]);
+                vertices.Add(new Vector3(x, y, z));
+                
+                Color color = Color.white;
+                if (parts.Length >= 9)
+                {
+                    byte r = byte.Parse(parts[6]);
+                    byte g = byte.Parse(parts[7]);
+                    byte b = byte.Parse(parts[8]);
+                    color = new Color(r / 255f, g / 255f, b / 255f);
+                }
+                colors.Add(color);
+                count++;
+            }
+        }
+        
+        Debug.Log($"=== PointCloudRenderer: Loaded {vertices.Count} vertices from ASCII PLY ===");
     }
     
     void LoadCSVFile(string path)
@@ -216,7 +336,10 @@ public class PointCloudRenderer : MonoBehaviour
     
     public void CreateMesh()
     {
-        // 清除现有的MeshFilter和MeshRenderer组件
+        // 清除现有的子对象（用于分批渲染）
+        ClearMeshChildren();
+        
+        // 清除主对象的MeshFilter和MeshRenderer
         MeshFilter existingFilter = GetComponent<MeshFilter>();
         if (existingFilter != null)
         {
@@ -229,21 +352,189 @@ public class PointCloudRenderer : MonoBehaviour
             DestroyImmediate(existingRenderer);
         }
         
-        mesh = new Mesh();
-        mesh.vertices = vertices.ToArray();
-        mesh.colors = colors.ToArray();
-        mesh.SetIndices(Enumerable.Range(0, vertices.Count).ToArray(), MeshTopology.Points, 0);
+        // 使用空间分桶算法，将空间上接近的点放入同一个Mesh
+        CreateSpatialMeshBatches();
+    }
+    
+    void CreateSpatialMeshBatches()
+    {
+        const int maxVerticesPerMesh = 65000;
+        int totalVertices = vertices.Count;
         
-        MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
+        // 计算点云的边界框
+        Vector3 minBounds = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+        Vector3 maxBounds = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+        
+        foreach (Vector3 vertex in vertices)
+        {
+            minBounds = Vector3.Min(minBounds, vertex);
+            maxBounds = Vector3.Max(maxBounds, vertex);
+        }
+        
+        Vector3 boundsSize = maxBounds - minBounds;
+        Debug.Log($"=== PointCloudRenderer: Bounds size: {boundsSize}, Min: {minBounds}, Max: {maxBounds} ===");
+        
+        // 计算需要的网格数量（每个网格最多65000个顶点）
+        int targetBatchCount = Mathf.CeilToInt((float)totalVertices / maxVerticesPerMesh);
+        
+        // 计算每个维度的分割数，使总网格数接近targetBatchCount
+        int divisionsPerAxis = Mathf.CeilToInt(Mathf.Pow(targetBatchCount, 1f / 3f));
+        divisionsPerAxis = Mathf.Max(1, divisionsPerAxis);
+        
+        Debug.Log($"=== PointCloudRenderer: Creating spatial grid with {divisionsPerAxis}x{divisionsPerAxis}x{divisionsPerAxis} divisions ===");
+        
+        // 创建空间网格字典：key是网格坐标，value是该网格内的顶点索引列表
+        Dictionary<Vector3Int, List<int>> spatialGrid = new Dictionary<Vector3Int, List<int>>();
+        
+        // 将每个顶点分配到对应的空间网格
+        for (int i = 0; i < totalVertices; i++)
+        {
+            Vector3 vertex = vertices[i];
+            Vector3 normalizedPos = new Vector3(
+                (vertex.x - minBounds.x) / boundsSize.x,
+                (vertex.y - minBounds.y) / boundsSize.y,
+                (vertex.z - minBounds.z) / boundsSize.z
+            );
+            
+            Vector3Int gridCoord = new Vector3Int(
+                Mathf.FloorToInt(normalizedPos.x * divisionsPerAxis),
+                Mathf.FloorToInt(normalizedPos.y * divisionsPerAxis),
+                Mathf.FloorToInt(normalizedPos.z * divisionsPerAxis)
+            );
+            
+            // 确保坐标在有效范围内
+            gridCoord.x = Mathf.Clamp(gridCoord.x, 0, divisionsPerAxis - 1);
+            gridCoord.y = Mathf.Clamp(gridCoord.y, 0, divisionsPerAxis - 1);
+            gridCoord.z = Mathf.Clamp(gridCoord.z, 0, divisionsPerAxis - 1);
+            
+            if (!spatialGrid.ContainsKey(gridCoord))
+            {
+                spatialGrid[gridCoord] = new List<int>();
+            }
+            spatialGrid[gridCoord].Add(i);
+        }
+        
+        Debug.Log($"=== PointCloudRenderer: Created {spatialGrid.Count} spatial cells ===");
+        
+        // 将空间网格合并成Mesh批次（每个Mesh最多65000个顶点）
+        List<List<int>> meshBatches = new List<List<int>>();
+        List<int> currentBatch = new List<int>();
+        
+        foreach (var kvp in spatialGrid)
+        {
+            List<int> cellVertices = kvp.Value;
+            
+            // 如果当前批次加上这个网格的顶点数超过限制，就创建新批次
+            if (currentBatch.Count + cellVertices.Count > maxVerticesPerMesh && currentBatch.Count > 0)
+            {
+                meshBatches.Add(new List<int>(currentBatch));
+                currentBatch.Clear();
+            }
+            
+            // 如果单个网格就超过限制，需要分割
+            if (cellVertices.Count > maxVerticesPerMesh)
+            {
+                // 先保存当前批次
+                if (currentBatch.Count > 0)
+                {
+                    meshBatches.Add(new List<int>(currentBatch));
+                    currentBatch.Clear();
+                }
+                
+                // 分割大网格
+                for (int i = 0; i < cellVertices.Count; i += maxVerticesPerMesh)
+                {
+                    List<int> splitBatch = cellVertices.GetRange(i, Mathf.Min(maxVerticesPerMesh, cellVertices.Count - i));
+                    meshBatches.Add(splitBatch);
+                }
+            }
+            else
+            {
+                currentBatch.AddRange(cellVertices);
+            }
+        }
+        
+        // 添加最后一个批次
+        if (currentBatch.Count > 0)
+        {
+            meshBatches.Add(currentBatch);
+        }
+        
+        Debug.Log($"=== PointCloudRenderer: Merged into {meshBatches.Count} mesh batches ===");
+        
+        // 创建Mesh
+        for (int i = 0; i < meshBatches.Count; i++)
+        {
+            CreateMeshBatchFromIndices(i, meshBatches[i]);
+        }
+        
+        Debug.Log($"=== PointCloudRenderer: Created {meshBatches.Count} spatial mesh batches ===");
+    }
+    
+    void ClearMeshChildren()
+    {
+        // 删除所有用于分批渲染的子对象
+        List<Transform> childrenToDestroy = new List<Transform>();
+        foreach (Transform child in transform)
+        {
+            if (child.name.StartsWith("PointCloudMesh_"))
+            {
+                childrenToDestroy.Add(child);
+            }
+        }
+        
+        foreach (Transform child in childrenToDestroy)
+        {
+            DestroyImmediate(child.gameObject);
+        }
+    }
+    
+    void CreateMeshBatchFromIndices(int batchIndex, List<int> vertexIndices)
+    {
+        // 创建子对象
+        GameObject meshObj = new GameObject($"PointCloudMesh_{batchIndex}");
+        meshObj.transform.parent = transform;
+        meshObj.transform.localPosition = Vector3.zero;
+        meshObj.transform.localRotation = Quaternion.identity;
+        meshObj.transform.localScale = Vector3.one;
+        
+        // 设置tag为"Ply"用于射线检测
+        meshObj.tag = "Ply";
+        
+        int vertexCount = vertexIndices.Count;
+        
+        // 提取这批顶点数据
+        Vector3[] batchVertices = new Vector3[vertexCount];
+        Color[] batchColors = new Color[vertexCount];
+        int[] indices = new int[vertexCount];
+        
+        for (int i = 0; i < vertexCount; i++)
+        {
+            int sourceIndex = vertexIndices[i];
+            batchVertices[i] = vertices[sourceIndex];
+            batchColors[i] = colors[sourceIndex];
+            indices[i] = i;
+        }
+        
+        // 创建Mesh
+        Mesh mesh = new Mesh();
+        mesh.vertices = batchVertices;
+        mesh.colors = batchColors;
+        mesh.SetIndices(indices, MeshTopology.Points, 0);
+        mesh.UploadMeshData(true); // 优化：上传到GPU后释放CPU内存
+        
+        // 添加组件
+        MeshFilter meshFilter = meshObj.AddComponent<MeshFilter>();
         meshFilter.mesh = mesh;
         
-        MeshRenderer meshRenderer = gameObject.AddComponent<MeshRenderer>();
+        MeshRenderer meshRenderer = meshObj.AddComponent<MeshRenderer>();
         if (pointMaterial == null)
         {
             pointMaterial = new Material(Shader.Find("Custom/PointCloudShader"));
         }
         meshRenderer.material = pointMaterial;
-        UpdateMaterialProperties();
+        
+        Debug.Log($"=== PointCloudRenderer: Spatial batch {batchIndex} created with {vertexCount} vertices ===");
     }
     
     void Update()
@@ -483,8 +774,44 @@ public class PointCloudRendererEditor : Editor
         
         PointCloudRenderer renderer = (PointCloudRenderer)target;
         
-        // 基本参数
-        renderer.filePath = EditorGUILayout.TextField("File Path", renderer.filePath);
+        // 基本参数 - 文件路径选择
+        EditorGUILayout.LabelField("Point Cloud File", EditorStyles.boldLabel);
+        EditorGUILayout.BeginHorizontal();
+        renderer.filePath = EditorGUILayout.TextField(renderer.filePath);
+        if (GUILayout.Button("Browse...", GUILayout.Width(80)))
+        {
+            string selectedPath = EditorUtility.OpenFilePanel(
+                "Select Point Cloud File",
+                "Assets/Data",
+                "ply,csv");
+            
+            if (!string.IsNullOrEmpty(selectedPath))
+            {
+                // 转换为相对路径
+                string projectPath = System.IO.Path.GetFullPath(".");
+                if (selectedPath.StartsWith(projectPath))
+                {
+                    renderer.filePath = selectedPath.Substring(projectPath.Length + 1).Replace('\\', '/');
+                }
+                else
+                {
+                    renderer.filePath = selectedPath;
+                }
+                EditorUtility.SetDirty(renderer);
+            }
+        }
+        EditorGUILayout.EndHorizontal();
+        
+        // 加载点云按钮
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button("Load Point Cloud", GUILayout.Height(25)))
+        {
+            renderer.Initialize();
+            EditorUtility.SetDirty(renderer);
+        }
+        EditorGUILayout.EndHorizontal();
+        
+        EditorGUILayout.Space();
         renderer.pointSize = EditorGUILayout.Slider("Point Size", renderer.pointSize, 0.001f, 5.0f);
         renderer.pointWidth = EditorGUILayout.Slider("Point Width", renderer.pointWidth, 0.01f, 10.0f);
         renderer.pointHeight = EditorGUILayout.Slider("Point Height", renderer.pointHeight, 0.01f, 10.0f);

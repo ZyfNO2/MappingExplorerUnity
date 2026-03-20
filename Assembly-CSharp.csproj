@@ -67,6 +67,7 @@
     <Analyzer Include="F:\Unity\Fork Project\Mapping\Library\PackageCache\org.nuget.microsoft.codeanalysis.analyzers@3.11.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\RaycastToPly.cs" />
     <Compile Include="Assets\Scripts\SphereGenerator.cs" />
     <Compile Include="Assets\Scripts\TestObjectGenerator.cs" />
     <Compile Include="Assets\Scripts\PointCloudRenderer.cs" />
@@ -1213,16 +1214,16 @@
       <HintPath>Library\ScriptAssemblies\Extensions.Unity.PlayerPrefsEx.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="PPv2URPConverters">
+      <HintPath>Library\ScriptAssemblies\PPv2URPConverters.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.Settings.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Settings.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Mathematics">
       <HintPath>Library\ScriptAssemblies\Unity.Mathematics.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="PPv2URPConverters">
-      <HintPath>Library\ScriptAssemblies\PPv2URPConverters.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.Shaders">
