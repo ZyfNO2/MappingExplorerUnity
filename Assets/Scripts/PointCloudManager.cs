@@ -53,6 +53,18 @@ public class PointCloudManager : MonoBehaviour
     // private KDTree kdTree;
     private Mesh generatedMesh;
     
+    // 空间网格数据（用于区域筛选）
+    private Dictionary<Vector3Int, List<int>> spatialGrid;
+    private Dictionary<Vector3Int, Bounds> gridBoundsCache;
+    private Vector3 gridMinBounds;
+    private Vector3 gridMaxBounds;
+    private Vector3 gridCellSize;
+    private Dictionary<Vector3Int, List<GameObject>> gridToGameObjects;
+    
+    // 精确筛选数据
+    private HashSet<int> filteredPointIndices; // 存储筛选后的点索引
+    private bool isPreciseFilterApplied = false; // 标记是否应用了精确筛选
+    
     // 处理状态
     private bool isProcessing = false;
     private ProcessingStage currentStage = ProcessingStage.Idle;
@@ -149,8 +161,15 @@ public class PointCloudManager : MonoBehaviour
         Vector3 boundsSize = maxBounds - minBounds;
         Debug.Log($"[PointCloudManager] Bounds: {boundsSize}, Points: {pointCloudData.Count}");
         
+        // 保存网格元数据（用于区域筛选）
+        gridMinBounds = minBounds;
+        gridMaxBounds = maxBounds;
+        gridCellSize = boundsSize / spatialDivisions;
+        gridBoundsCache = new Dictionary<Vector3Int, Bounds>();
+        gridToGameObjects = new Dictionary<Vector3Int, List<GameObject>>();
+        
         // 空间分桶
-        Dictionary<Vector3Int, List<int>> spatialGrid = new Dictionary<Vector3Int, List<int>>();
+        spatialGrid = new Dictionary<Vector3Int, List<int>>();
         
         for (int i = 0; i < pointCloudData.Count; i++)
         {
@@ -254,6 +273,21 @@ public class PointCloudManager : MonoBehaviour
             pointMaterial.SetFloat("_UseVertexColor", 1);
         }
         renderer.material = pointMaterial;
+        
+        // 缓存GameObject引用（用于区域筛选）
+        if (!gridToGameObjects.ContainsKey(gridCoord))
+        {
+            gridToGameObjects[gridCoord] = new List<GameObject>();
+        }
+        gridToGameObjects[gridCoord].Add(meshObj);
+        
+        // 预计算格子边界（用于快速区域查询）
+        if (!gridBoundsCache.ContainsKey(gridCoord))
+        {
+            Vector3 cellMin = gridMinBounds + Vector3.Scale(gridCoord, gridCellSize);
+            Vector3 cellMax = cellMin + gridCellSize;
+            gridBoundsCache[gridCoord] = new Bounds((cellMin + cellMax) / 2, cellMax - cellMin);
+        }
     }
     
     /*
@@ -654,6 +688,11 @@ public class PointCloudManager : MonoBehaviour
         {
             DestroyImmediate(col);
         }
+        
+        // 清理空间网格数据
+        spatialGrid?.Clear();
+        gridBoundsCache?.Clear();
+        gridToGameObjects?.Clear();
     }
     
     /// <summary>
@@ -686,6 +725,347 @@ public class PointCloudManager : MonoBehaviour
     public ProcessingStage GetCurrentStage() { return currentStage; }
     public bool IsProcessing() { return isProcessing; }
     public IReadOnlyList<PointData> GetPointCloudData() { return pointCloudData.AsReadOnly(); }
+    
+    #region Region Filtering
+    
+    /// <summary>
+    /// 世界坐标转网格坐标
+    /// </summary>
+    private Vector3Int WorldToGrid(Vector3 worldPos)
+    {
+        Vector3 boundsSize = gridMaxBounds - gridMinBounds;
+        if (boundsSize.x <= 0 || boundsSize.y <= 0 || boundsSize.z <= 0)
+            return Vector3Int.zero;
+            
+        Vector3 normalized = new Vector3(
+            (worldPos.x - gridMinBounds.x) / boundsSize.x,
+            (worldPos.y - gridMinBounds.y) / boundsSize.y,
+            (worldPos.z - gridMinBounds.z) / boundsSize.z
+        );
+        Vector3Int gridCoord = new Vector3Int(
+            Mathf.FloorToInt(normalized.x * spatialDivisions),
+            Mathf.FloorToInt(normalized.y * spatialDivisions),
+            Mathf.FloorToInt(normalized.z * spatialDivisions)
+        );
+        
+        // 限制在有效范围内
+        gridCoord.x = Mathf.Clamp(gridCoord.x, 0, spatialDivisions - 1);
+        gridCoord.y = Mathf.Clamp(gridCoord.y, 0, spatialDivisions - 1);
+        gridCoord.z = Mathf.Clamp(gridCoord.z, 0, spatialDivisions - 1);
+        return gridCoord;
+    }
+    
+    /// <summary>
+    /// 获取与目标边界相交的所有格子坐标
+    /// </summary>
+    public List<Vector3Int> GetGridCellsInRegion(Bounds region)
+    {
+        List<Vector3Int> cells = new List<Vector3Int>();
+        
+        if (spatialGrid == null || gridBoundsCache == null)
+        {
+            Debug.LogWarning("[PointCloudManager] Point cloud not loaded or spatial grid not initialized");
+            return cells;
+        }
+        
+        // 将区域边界转换为网格坐标
+        Vector3Int minCell = WorldToGrid(region.min);
+        Vector3Int maxCell = WorldToGrid(region.max);
+        
+        // 遍历所有可能相交的格子
+        for (int x = minCell.x; x <= maxCell.x; x++)
+        {
+            for (int y = minCell.y; y <= maxCell.y; y++)
+            {
+                for (int z = minCell.z; z <= maxCell.z; z++)
+                {
+                    Vector3Int cellCoord = new Vector3Int(x, y, z);
+                    
+                    // 检查边界是否有效且实际相交
+                    if (gridBoundsCache.TryGetValue(cellCoord, out Bounds cellBounds))
+                    {
+                        if (cellBounds.Intersects(region))
+                        {
+                            cells.Add(cellCoord);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return cells;
+    }
+    
+    /// <summary>
+    /// 根据边界框筛选显示点云（只显示区域内的点）
+    /// </summary>
+    public void FilterByBounds(Bounds region)
+    {
+        if (spatialGrid == null || gridToGameObjects == null)
+        {
+            Debug.LogWarning("[PointCloudManager] Point cloud not loaded");
+            return;
+        }
+        
+        Debug.Log($"[PointCloudManager] Filtering by region: center={region.center}, size={region.size}");
+        
+        // 1. 获取所有需要显示的格子
+        List<Vector3Int> targetCells = GetGridCellsInRegion(region);
+        HashSet<Vector3Int> cellSet = new HashSet<Vector3Int>(targetCells);
+        
+        Debug.Log($"[PointCloudManager] Target cells: {targetCells.Count}");
+        
+        // 2. 遍历所有GameObject，根据格子坐标决定是否显示
+        int hiddenCount = 0;
+        int visibleCount = 0;
+        
+        foreach (var kvp in gridToGameObjects)
+        {
+            Vector3Int cellCoord = kvp.Key;
+            List<GameObject> meshObjects = kvp.Value;
+            
+            bool inRegion = cellSet.Contains(cellCoord);
+            
+            foreach (var meshObj in meshObjects)
+            {
+                if (meshObj != null)
+                {
+                    meshObj.SetActive(inRegion);
+                    if (inRegion) visibleCount++;
+                    else hiddenCount++;
+                }
+            }
+        }
+        
+        Debug.Log($"[PointCloudManager] Filter complete: Visible={visibleCount}, Hidden={hiddenCount}");
+    }
+    
+    /// <summary>
+    /// 根据边界框精确筛选点云（只显示区域内的点）- 精确到每个点
+    /// </summary>
+    public void FilterByBoundsPrecise(Bounds region)
+    {
+        if (pointCloudData == null || pointCloudData.Count == 0)
+        {
+            Debug.LogWarning("[PointCloudManager] Point cloud data not loaded");
+            return;
+        }
+        
+        if (spatialGrid == null || gridToGameObjects == null)
+        {
+            Debug.LogWarning("[PointCloudManager] Spatial grid not initialized");
+            return;
+        }
+        
+        Debug.Log($"[PointCloudManager] Precise filtering by region: center={region.center}, size={region.size}");
+        
+        // 记录开始时间
+        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        stopwatch.Start();
+        
+        // 1. 先获取所有可能与区域相交的格子（粗筛）
+        List<Vector3Int> candidateCells = GetGridCellsInRegion(region);
+        Debug.Log($"[PointCloudManager] Candidate cells for precise filter: {candidateCells.Count}");
+        
+        // 2. 精确筛选：在每个格子内检查每个点是否在边界内
+        int totalPointsChecked = 0;
+        int pointsInRegion = 0;
+        int meshesRebuilt = 0;
+        
+        // 记录需要显示的点的索引（用于后续恢复）
+        filteredPointIndices = new HashSet<int>();
+        
+        foreach (Vector3Int cellCoord in candidateCells)
+        {
+            if (!spatialGrid.TryGetValue(cellCoord, out List<int> pointIndices))
+                continue;
+            
+            if (!gridToGameObjects.TryGetValue(cellCoord, out List<GameObject> meshObjects))
+                continue;
+            
+            // 收集在此区域内的点的索引
+            List<int> indicesInRegion = new List<int>();
+            foreach (int pointIndex in pointIndices)
+            {
+                totalPointsChecked++;
+                Vector3 pointPos = pointCloudData[pointIndex].position;
+                
+                // 精确检查点是否在边界框内
+                if (region.Contains(pointPos))
+                {
+                    indicesInRegion.Add(pointIndex);
+                    filteredPointIndices.Add(pointIndex);
+                    pointsInRegion++;
+                }
+            }
+            
+            // 重建Mesh，只包含在区域内的点
+            if (indicesInRegion.Count > 0)
+            {
+                RebuildMeshWithPoints(meshObjects, indicesInRegion);
+                meshesRebuilt++;
+            }
+            else
+            {
+                // 没有点在区域内，隐藏所有mesh
+                foreach (var meshObj in meshObjects)
+                {
+                    if (meshObj != null)
+                        meshObj.SetActive(false);
+                }
+            }
+        }
+        
+        // 3. 隐藏不在候选格子中的mesh（确定不在区域内）
+        HashSet<Vector3Int> candidateCellSet = new HashSet<Vector3Int>(candidateCells);
+        int hiddenCount = 0;
+        foreach (var kvp in gridToGameObjects)
+        {
+            if (!candidateCellSet.Contains(kvp.Key))
+            {
+                foreach (var meshObj in kvp.Value)
+                {
+                    if (meshObj != null && meshObj.activeSelf)
+                    {
+                        meshObj.SetActive(false);
+                        hiddenCount++;
+                    }
+                }
+            }
+        }
+        
+        stopwatch.Stop();
+        
+        Debug.Log($"[PointCloudManager] Precise filter complete:\n" +
+                  $"  - Points checked: {totalPointsChecked}\n" +
+                  $"  - Points in region: {pointsInRegion}\n" +
+                  $"  - Meshes rebuilt: {meshesRebuilt}\n" +
+                  $"  - Meshes hidden: {hiddenCount}\n" +
+                  $"  - Time elapsed: {stopwatch.ElapsedMilliseconds}ms");
+        
+        isPreciseFilterApplied = true;
+    }
+    
+    /// <summary>
+    /// 根据指定的点索引重建Mesh
+    /// </summary>
+    private void RebuildMeshWithPoints(List<GameObject> meshObjects, List<int> pointIndices)
+    {
+        if (meshObjects == null || meshObjects.Count == 0 || pointIndices == null || pointIndices.Count == 0)
+            return;
+        
+        // 创建新的vertices、colors和indices数组
+        int vertexCount = pointIndices.Count;
+        Vector3[] vertices = new Vector3[vertexCount];
+        Color[] colors = new Color[vertexCount];
+        int[] indices = new int[vertexCount];
+        
+        for (int i = 0; i < vertexCount; i++)
+        {
+            int sourceIndex = pointIndices[i];
+            vertices[i] = pointCloudData[sourceIndex].position;
+            colors[i] = pointCloudData[sourceIndex].color;
+            indices[i] = i;
+        }
+        
+        // 创建新的Mesh
+        Mesh newMesh = new Mesh();
+        newMesh.vertices = vertices;
+        newMesh.colors = colors;
+        newMesh.SetIndices(indices, MeshTopology.Points, 0);
+        newMesh.UploadMeshData(false);
+        
+        // 应用Mesh到第一个GameObject，隐藏其他的（因为我们是按单元存储的）
+        for (int i = 0; i < meshObjects.Count; i++)
+        {
+            GameObject meshObj = meshObjects[i];
+            if (meshObj == null) continue;
+            
+            MeshFilter meshFilter = meshObj.GetComponent<MeshFilter>();
+            if (meshFilter == null)
+                meshFilter = meshObj.AddComponent<MeshFilter>();
+            
+            // 只在第一个对象上设置Mesh，其他对象隐藏
+            if (i == 0)
+            {
+                meshFilter.sharedMesh = newMesh;
+                meshObj.SetActive(true);
+                
+                // 确保有MeshRenderer
+                MeshRenderer renderer = meshObj.GetComponent<MeshRenderer>();
+                if (renderer == null)
+                    renderer = meshObj.AddComponent<MeshRenderer>();
+                
+                if (pointMaterial != null)
+                    renderer.material = pointMaterial;
+            }
+            else
+            {
+                meshObj.SetActive(false);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 清除筛选，显示所有点云
+    /// </summary>
+    public void ClearFilter()
+    {
+        if (gridToGameObjects == null)
+        {
+            Debug.LogWarning("[PointCloudManager] Point cloud not loaded");
+            return;
+        }
+        
+        Debug.Log("[PointCloudManager] Clearing filter, showing all points");
+        
+        // 如果应用了精确筛选，需要重建所有Mesh
+        if (isPreciseFilterApplied && spatialGrid != null)
+        {
+            Debug.Log("[PointCloudManager] Rebuilding all meshes to restore original point cloud");
+            
+            int meshesRebuilt = 0;
+            foreach (var kvp in spatialGrid)
+            {
+                Vector3Int cellCoord = kvp.Key;
+                List<int> pointIndices = kvp.Value;
+                
+                if (gridToGameObjects.TryGetValue(cellCoord, out List<GameObject> meshObjects))
+                {
+                    RebuildMeshWithPoints(meshObjects, pointIndices);
+                    meshesRebuilt++;
+                }
+            }
+            
+            isPreciseFilterApplied = false;
+            filteredPointIndices = null;
+            
+            Debug.Log($"[PointCloudManager] Rebuilt {meshesRebuilt} meshes to restore all points");
+        }
+        else
+        {
+            // 普通筛选，只需激活所有GameObject
+            int restoredCount = 0;
+            foreach (var kvp in gridToGameObjects)
+            {
+                foreach (var meshObj in kvp.Value)
+                {
+                    if (meshObj != null && !meshObj.activeSelf)
+                    {
+                        meshObj.SetActive(true);
+                        restoredCount++;
+                    }
+                }
+            }
+            
+            if (restoredCount > 0)
+            {
+                Debug.Log($"[PointCloudManager] Restored {restoredCount} mesh batches");
+            }
+        }
+    }
+    
+    #endregion
 }
 
 #if UNITY_EDITOR
