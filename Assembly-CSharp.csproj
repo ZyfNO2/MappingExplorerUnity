@@ -59,26 +59,22 @@
     <UnityVersion>2022.3.62f3</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Analyzer Include="F:\Unity\Fork Project\Mapping\Library\PackageCache\org.nuget.microsoft.extensions.logging.abstractions@10.0.3\analyzers\dotnet\roslyn4.0\cs\Microsoft.Extensions.Logging.Generators.dll" />
-    <Analyzer Include="F:\Unity\Fork Project\Mapping\Library\PackageCache\org.nuget.system.text.json@10.0.3\analyzers\dotnet\roslyn4.0\cs\System.Text.Json.SourceGeneration.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\2022.3.62f3\Editor\Data\Tools\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\2022.3.62f3\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
-    <Analyzer Include="F:\Unity\Fork Project\Mapping\Library\PackageCache\org.nuget.microsoft.codeanalysis.analyzers@3.11.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
-    <Analyzer Include="F:\Unity\Fork Project\Mapping\Library\PackageCache\org.nuget.microsoft.codeanalysis.analyzers@3.11.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\Legacy\CameraSync.cs" />
-    <Compile Include="Assets\Scripts\Legacy\RaycastDebugger.cs" />
-    <Compile Include="Assets\Scripts\Legacy\PointCloudPicker.cs" />
-    <Compile Include="Assets\Scripts\Legacy\KDTree.cs" />
-    <Compile Include="Assets\Scripts\Legacy\SphereGenerator.cs" />
     <Compile Include="Assets\Scripts\Legacy\PointCloudRenderer.cs" />
     <Compile Include="Assets\Scripts\PointCloudManager.cs" />
     <Compile Include="Assets\Scripts\Legacy\RaycastToPly.cs" />
     <Compile Include="Assets\Scripts\PointCloudClickDetector.cs" />
-    <Compile Include="Assets\Scripts\Legacy\PointCloudImporter.cs" />
     <Compile Include="Assets\Scripts\Legacy\TestObjectGenerator.cs" />
     <Compile Include="Assets\Scripts\Legacy\DelaunayTriangulation.cs" />
+    <Compile Include="Assets\Scripts\Legacy\RaycastDebugger.cs" />
+    <Compile Include="Assets\Scripts\Legacy\PointCloudPicker.cs" />
+    <Compile Include="Assets\Scripts\Legacy\KDTree.cs" />
+    <Compile Include="Assets\Scripts\Legacy\SphereGenerator.cs" />
+    <Compile Include="Assets\Scripts\Legacy\PointCloudImporter.cs" />
+    <Compile Include="Assets\Scripts\CameraSync.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Shaders\PointCloudShader.shader" />
@@ -417,28 +413,8 @@
       <HintPath>D:\Unity\Hub\Editor\2022.3.62f3\Editor\Data\Managed\UnityEngine\UnityEditor.UnityConnectModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.AspNetCore.Connections.Abstractions">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.aspnetcore.connections.abstractions@10.0.3\lib\netstandard2.1\Microsoft.AspNetCore.Connections.Abstractions.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Diagnostics.DiagnosticSource">
-      <HintPath>Library\PackageCache\org.nuget.system.diagnostics.diagnosticsource@10.0.3\lib\netstandard2.0\System.Diagnostics.DiagnosticSource.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.Collections.Immutable">
-      <HintPath>Library\PackageCache\org.nuget.system.collections.immutable@9.0.0\lib\netstandard2.0\System.Collections.Immutable.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.extensions.dependencyinjection.abstractions@10.0.3\lib\netstandard2.1\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="R3">
-      <HintPath>Library\PackageCache\org.nuget.r3@1.3.0\lib\netstandard2.1\R3.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.AspNetCore.SignalR.Common">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.aspnetcore.signalr.common@10.0.3\lib\netstandard2.0\Microsoft.AspNetCore.SignalR.Common.dll</HintPath>
+      <HintPath>Assets\Plugins\Roslyn\System.Collections.Immutable.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="ReportGeneratorMerged">
@@ -446,139 +422,23 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.codeanalysis.common@4.14.0\lib\netstandard2.0\Microsoft.CodeAnalysis.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.AspNetCore.SignalR.Protocols.Json">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.aspnetcore.signalr.protocols.json@10.0.3\lib\netstandard2.0\Microsoft.AspNetCore.SignalR.Protocols.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Diagnostics.Abstractions">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.extensions.diagnostics.abstractions@10.0.3\lib\netstandard2.0\Microsoft.Extensions.Diagnostics.Abstractions.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Text.Encoding.CodePages">
-      <HintPath>Library\PackageCache\org.nuget.system.text.encoding.codepages@7.0.0\lib\netstandard2.0\System.Text.Encoding.CodePages.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>Library\PackageCache\org.nuget.system.runtime.compilerservices.unsafe@6.1.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.ComponentModel.Annotations">
-      <HintPath>Library\PackageCache\org.nuget.system.componentmodel.annotations@5.0.0\lib\netstandard2.1\System.ComponentModel.Annotations.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Bcl.Memory">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.bcl.memory@10.0.3\lib\netstandard2.1\Microsoft.Bcl.Memory.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.DependencyInjection">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.extensions.dependencyinjection@10.0.3\lib\netstandard2.1\Microsoft.Extensions.DependencyInjection.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.AspNetCore.Http.Connections.Client">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.aspnetcore.http.connections.client@10.0.3\lib\netstandard2.1\Microsoft.AspNetCore.Http.Connections.Client.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.AspNetCore.SignalR.Client.Core">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.aspnetcore.signalr.client.core@10.0.3\lib\netstandard2.1\Microsoft.AspNetCore.SignalR.Client.Core.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ReflectorNet">
-      <HintPath>Library\PackageCache\com.ivanmurzak.unity.mcp@0.51.5\Plugins\com.IvanMurzak.ReflectorNet\ReflectorNet.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Text.Encodings.Web">
-      <HintPath>Library\PackageCache\org.nuget.system.text.encodings.web@10.0.3\lib\netstandard2.0\System.Text.Encodings.Web.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Logging.Abstractions">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.extensions.logging.abstractions@10.0.3\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Bcl.AsyncInterfaces">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.bcl.asyncinterfaces@10.0.3\lib\netstandard2.1\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.AspNetCore.Http.Connections.Common">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.aspnetcore.http.connections.common@10.0.3\lib\netstandard2.0\Microsoft.AspNetCore.Http.Connections.Common.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Caching.Abstractions">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.extensions.caching.abstractions@10.0.3\lib\netstandard2.0\Microsoft.Extensions.Caching.Abstractions.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="McpPlugin">
-      <HintPath>Library\PackageCache\com.ivanmurzak.unity.mcp@0.51.5\Plugins\com.IvanMurzak.McpPlugin\netstandard2.1\McpPlugin.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.IO.Pipelines">
-      <HintPath>Library\PackageCache\org.nuget.system.io.pipelines@10.0.3\lib\netstandard2.0\System.IO.Pipelines.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.FileProviders.Abstractions">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.extensions.fileproviders.abstractions@10.0.3\lib\netstandard2.0\Microsoft.Extensions.FileProviders.Abstractions.dll</HintPath>
+      <HintPath>Assets\Plugins\Roslyn\Microsoft.CodeAnalysis.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
       <HintPath>Library\PackageCache\com.unity.visualscripting@1.9.4\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.Extensions.Hosting.Abstractions">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.extensions.hosting.abstractions@10.0.3\lib\netstandard2.1\Microsoft.Extensions.Hosting.Abstractions.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Options">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.extensions.options@10.0.3\lib\netstandard2.1\Microsoft.Extensions.Options.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.Reflection.Metadata">
-      <HintPath>Library\PackageCache\org.nuget.system.reflection.metadata@9.0.0\lib\netstandard2.0\System.Reflection.Metadata.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Threading.Channels">
-      <HintPath>Library\PackageCache\org.nuget.system.threading.channels@10.0.3\lib\netstandard2.1\System.Threading.Channels.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Logging">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.extensions.logging@10.0.3\lib\netstandard2.1\Microsoft.Extensions.Logging.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="McpPlugin.Common">
-      <HintPath>Library\PackageCache\com.ivanmurzak.unity.mcp@0.51.5\Plugins\com.IvanMurzak.McpPlugin\netstandard2.1\McpPlugin.Common.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Net.ServerSentEvents">
-      <HintPath>Library\PackageCache\org.nuget.system.net.serversentevents@10.0.3\lib\netstandard2.0\System.Net.ServerSentEvents.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Configuration.Abstractions">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.extensions.configuration.abstractions@10.0.3\lib\netstandard2.0\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Text.Json">
-      <HintPath>Library\PackageCache\org.nuget.system.text.json@10.0.3\lib\netstandard2.0\System.Text.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Bcl.TimeProvider">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.bcl.timeprovider@10.0.3\lib\netstandard2.0\Microsoft.Bcl.TimeProvider.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.AspNetCore.SignalR.Client">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.aspnetcore.signalr.client@10.0.3\lib\netstandard2.0\Microsoft.AspNetCore.SignalR.Client.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Features">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.extensions.features@10.0.3\lib\netstandard2.0\Microsoft.Extensions.Features.dll</HintPath>
+      <HintPath>Assets\Plugins\Roslyn\System.Reflection.Metadata.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.codeanalysis.csharp@4.14.0\lib\netstandard2.0\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      <HintPath>Assets\Plugins\Roslyn\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.Extensions.Primitives">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.extensions.primitives@10.0.3\lib\netstandard2.0\Microsoft.Extensions.Primitives.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@3.2.1\Runtime\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="netstandard">
@@ -1073,6 +933,10 @@
       <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="MCPForUnity.Runtime">
+      <HintPath>Library\ScriptAssemblies\MCPForUnity.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.EditorCoroutines.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.EditorCoroutines.Editor.dll</HintPath>
       <Private>False</Private>
@@ -1085,20 +949,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Universal.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="com.IvanMurzak.Unity.MCP.TestFiles">
-      <HintPath>Library\ScriptAssemblies\com.IvanMurzak.Unity.MCP.TestFiles.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Burst.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Burst.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Burst">
       <HintPath>Library\ScriptAssemblies\Unity.Burst.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="com.IvanMurzak.Unity.MCP.Editor.Tests">
-      <HintPath>Library\ScriptAssemblies\com.IvanMurzak.Unity.MCP.Editor.Tests.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Timeline.Editor">
@@ -1173,20 +1029,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.TestTools.CodeCoverage.Editor.OpenCover.Mono.Reflection.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.Analyzers_Unity">
-      <HintPath>Library\ScriptAssemblies\Microsoft.CodeAnalysis.Analyzers_Unity.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.VisualScripting.SettingsProvider.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.SettingsProvider.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Performance.Profile-Analyzer.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Performance.Profile-Analyzer.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Extensions.Unity.PlayerPrefsEx.Editor.Tests">
-      <HintPath>Library\ScriptAssemblies\Extensions.Unity.PlayerPrefsEx.Editor.Tests.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Core.ShaderLibrary">
@@ -1205,24 +1053,8 @@
       <HintPath>Library\ScriptAssemblies\Unity.TestTools.CodeCoverage.Editor.OpenCover.Model.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="com.IvanMurzak.Unity.MCP.Runtime">
-      <HintPath>Library\ScriptAssemblies\com.IvanMurzak.Unity.MCP.Runtime.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.VisualScripting.State.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.State.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="com.IvanMurzak.Unity.MCP.Editor">
-      <HintPath>Library\ScriptAssemblies\com.IvanMurzak.Unity.MCP.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Extensions.Unity.PlayerPrefsEx">
-      <HintPath>Library\ScriptAssemblies\Extensions.Unity.PlayerPrefsEx.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="PPv2URPConverters">
-      <HintPath>Library\ScriptAssemblies\PPv2URPConverters.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Settings.Editor">
@@ -1233,12 +1065,20 @@
       <HintPath>Library\ScriptAssemblies\Unity.Mathematics.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="PPv2URPConverters">
+      <HintPath>Library\ScriptAssemblies\PPv2URPConverters.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.Shaders">
       <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Universal.Shaders.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Searcher.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Searcher.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MCPForUnity.Editor">
+      <HintPath>Library\ScriptAssemblies\MCPForUnity.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.State">
