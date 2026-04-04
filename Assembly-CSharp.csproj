@@ -63,21 +63,21 @@
     <Analyzer Include="D:\Unity\Hub\Editor\2022.3.62f3\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\Legacy\PointCloudRenderer.cs" />
-    <Compile Include="Assets\Scripts\PointCloudManager.cs" />
-    <Compile Include="Assets\Scripts\Legacy\RaycastToPly.cs" />
-    <Compile Include="Assets\Scripts\PointCloudClickDetector.cs" />
-    <Compile Include="Assets\Scripts\PointCloudSelectionTest.cs" />
-    <Compile Include="Assets\Scripts\SelectionBoxController.cs" />
-    <Compile Include="Assets\Scripts\PointCloudRegionSelector.cs" />
-    <Compile Include="Assets\Scripts\Legacy\TestObjectGenerator.cs" />
-    <Compile Include="Assets\Scripts\Legacy\DelaunayTriangulation.cs" />
     <Compile Include="Assets\Scripts\Legacy\RaycastDebugger.cs" />
     <Compile Include="Assets\Scripts\Legacy\PointCloudPicker.cs" />
     <Compile Include="Assets\Scripts\Legacy\KDTree.cs" />
     <Compile Include="Assets\Scripts\Legacy\SphereGenerator.cs" />
+    <Compile Include="Assets\Scripts\Legacy\PointCloudRenderer.cs" />
+    <Compile Include="Assets\Scripts\PointCloudManager.cs" />
+    <Compile Include="Assets\Scripts\Legacy\RaycastToPly.cs" />
+    <Compile Include="Assets\Scripts\PointCloudClickDetector.cs" />
     <Compile Include="Assets\Scripts\Legacy\PointCloudImporter.cs" />
+    <Compile Include="Assets\Scripts\PointCloudSelectionTest.cs" />
+    <Compile Include="Assets\Scripts\SelectionBoxController.cs" />
+    <Compile Include="Assets\Scripts\PointCloudRegionSelector.cs" />
+    <Compile Include="Assets\Scripts\Legacy\TestObjectGenerator.cs" />
     <Compile Include="Assets\Scripts\CameraSync.cs" />
+    <Compile Include="Assets\Scripts\Legacy\DelaunayTriangulation.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Shaders\PointCloudShader.shader" />
@@ -416,16 +416,12 @@
       <HintPath>D:\Unity\Hub\Editor\2022.3.62f3\Editor\Data\Managed\UnityEngine\UnityEditor.UnityConnectModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Collections.Immutable">
-      <HintPath>Assets\Plugins\Roslyn\System.Collections.Immutable.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="ReportGeneratorMerged">
       <HintPath>Library\PackageCache\com.unity.testtools.codecoverage@1.2.6\lib\ReportGenerator\ReportGeneratorMerged.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.CodeAnalysis">
-      <HintPath>Assets\Plugins\Roslyn\Microsoft.CodeAnalysis.dll</HintPath>
+    <Reference Include="System.Collections.Immutable">
+      <HintPath>Assets\Plugins\Roslyn\System.Collections.Immutable.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
@@ -434,6 +430,10 @@
     </Reference>
     <Reference Include="System.Reflection.Metadata">
       <HintPath>Assets\Plugins\Roslyn\System.Reflection.Metadata.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis">
+      <HintPath>Assets\Plugins\Roslyn\Microsoft.CodeAnalysis.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp">
@@ -1048,12 +1048,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.TestTools.CodeCoverage.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.PlasticSCM.Editor">
-      <HintPath>Library\ScriptAssemblies\Unity.PlasticSCM.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.TestTools.CodeCoverage.Editor.OpenCover.Model">
       <HintPath>Library\ScriptAssemblies\Unity.TestTools.CodeCoverage.Editor.OpenCover.Model.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.PlasticSCM.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.PlasticSCM.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.State.Editor">
@@ -1064,12 +1064,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.Settings.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.Mathematics">
-      <HintPath>Library\ScriptAssemblies\Unity.Mathematics.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="PPv2URPConverters">
       <HintPath>Library\ScriptAssemblies\PPv2URPConverters.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Mathematics">
+      <HintPath>Library\ScriptAssemblies\Unity.Mathematics.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.Shaders">

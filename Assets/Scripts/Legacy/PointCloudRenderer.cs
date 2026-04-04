@@ -4,6 +4,7 @@ using System.IO;
 using System;
 using System.Linq;
 using UnityEditor;
+using UnityEngine.SceneManagement;
 
 [ExecuteInEditMode]
 
@@ -38,13 +39,28 @@ public class PointCloudRenderer : MonoBehaviour
     {
         // 每次启用时重新初始化
         Initialize();
+        // 注册场景加载完成事件
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
     
-    void OnLevelWasLoaded(int level)
+    void OnDisable()
+    {
+        // 注销场景加载完成事件
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+    
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         // 场景加载时重新初始化
         Initialize();
     }
+    
+    // 废弃的方法，已替换为 SceneManager.sceneLoaded 事件
+    // void OnLevelWasLoaded(int level)
+    // {
+    //     // 场景加载时重新初始化
+    //     Initialize();
+    // }
     
     public void Initialize()
     {
