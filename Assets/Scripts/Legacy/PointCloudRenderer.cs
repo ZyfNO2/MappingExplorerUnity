@@ -55,13 +55,6 @@ public class PointCloudRenderer : MonoBehaviour
         Initialize();
     }
     
-    // 废弃的方法，已替换为 SceneManager.sceneLoaded 事件
-    // void OnLevelWasLoaded(int level)
-    // {
-    //     // 场景加载时重新初始化
-    //     Initialize();
-    // }
-    
     public void Initialize()
     {
         // 无论是否在编辑器模式还是运行模式，都重新载入点云
